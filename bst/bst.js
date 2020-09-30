@@ -7,6 +7,8 @@
  * }
  */
 
+const fs = require('fs');
+
 let debug = false;
 
 exports.create = (value, enableDebug = false) => {
@@ -97,7 +99,7 @@ function newNode(value) {
     right: null,
     left: null,
     height: 0
-  }
+  };
 }
 
 function rotateLeft(node) {
@@ -184,4 +186,30 @@ function calcHeight(node) {
   }
 
   return Math.max(left, right) + 1;
+}
+
+function convertDataFormat(tree) {
+  let result = {
+    name: tree.value,
+    children: []
+  }
+
+  // go left
+  if(tree.left !== null) {
+    result.children.push(convertDataFormat(tree.left));
+  }
+  // go right
+  if(tree.right !== null) {
+    result.children.push(convertDataFormat(tree.right));
+  }
+
+  return result;
+}
+
+exports.writeFile = function(tree) {
+  let vizGraphFormat = JSON.stringify({ version: "1.0.0", graph: convertDataFormat(tree) });
+  console.log(vizGraphFormat);
+  fs.writeFile('/Users/johnlonganecker/projects/graph-viz/graph-data/test.json', vizGraphFormat, err => {
+    console.log(err);
+  });
 }
