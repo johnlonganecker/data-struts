@@ -11,6 +11,28 @@ const fs = require('fs');
 
 let debug = false;
 
+function rebalance(node, value) {
+
+  node.height = calcHeight(node);
+
+  if(isLeftLeft(node, value)) {
+    node = rotateRight(node);
+  } 
+  else if(isLeftRight(node, value)) {
+    node.left = rotateLeft(node.left);
+    node = rotateRight(node);
+  }
+  else if(isRightRight(node, value)) {
+    node = rotateLeft(node);
+  }
+  else if(isRightLeft(node, value)) {
+    node.right = rotateRight(node.right);
+    node = rotateLeft(node);
+  }
+
+  return node;
+}
+
 exports.create = (value, enableDebug = false) => {
   debug = enableDebug;
   return this.insert(null, value);
@@ -42,24 +64,7 @@ exports.insert = (node, value) => {
     }
   }
 
-  node.height = calcHeight(node);
-
-  if(isLeftLeft(node, value)) {
-    node = rotateRight(node);
-  } 
-  else if(isLeftRight(node, value)) {
-    node.left = rotateLeft(node.left);
-    node = rotateRight(node);
-  }
-  else if(isRightRight(node, value)) {
-    node = rotateLeft(node);
-  }
-  else if(isRightLeft(node, value)) {
-    node.right = rotateRight(node.right);
-    node = rotateLeft(node);
-  }
-
-  return node;
+  return rebalance(node, value);
 };
 
 exports.has = (tree, value) => {
@@ -79,18 +84,42 @@ exports.has = (tree, value) => {
 };
 
 exports.remove = (tree, value) => {
-  // find node, if exist remove and rebalance
   if(tree === null) {
-    return false;
+    return tree;
+  }
+  else if(value < tree.value) {
+    tree.left = this.remove(tree.left, value);
+  }
+  else if(value > tree.value) {
+    tree.right = this.remove(tree.right, value);
+  }
+  else {
+    // if both exists
+    if(tree.left !== null && tree.right !== null) { 
+      // traverse, find smallest value on right side
+      let smallest = tree.right;
+
+      while(smallest.left !== null) {
+        smallest = smallest.left;
+      }
+      tree.value = smallest.value;
+      tree.right = this.remove(tree.right, smallest.value);
+    }
+    // if only right child
+    else if(tree.right !== null) {
+      return tree.right;
+    }
+    // if only left child
+    else if(tree.left !== null) {
+      return tree.left;
+    }
+    // no children
+    else if(tree.left === null && tree.right == null) {
+      return null;
+    }
   }
 
-  if(value < tree.value) {
-    this.remove(tree.left, value);
-  } else if(value > tree.value) {
-    this.remove(tree.right, value);
-  } else {
-    return true;
-  }
+  return rebalance(tree, value);
 };
 
 function newNode(value) {
