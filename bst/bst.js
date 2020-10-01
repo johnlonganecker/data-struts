@@ -3,7 +3,7 @@
  *  value: <int>,
  *  left: <node>,
  *  right: <node>,
- *  balancer: -2 .. 2
+ *  height: 0,1,2,3,4,...
  * }
  */
 
@@ -237,8 +237,24 @@ function convertDataFormat(tree) {
 
 exports.writeFile = function(tree) {
   let vizGraphFormat = JSON.stringify({ version: "1.0.0", graph: convertDataFormat(tree) });
-  console.log(vizGraphFormat);
+
   fs.writeFile('/Users/johnlonganecker/projects/graph-viz/graph-data/test.json', vizGraphFormat, err => {
     console.log(err);
   });
+}
+
+exports.delayedAdd = function(tree, arr, delay) {
+  let iID = setInterval(() => {
+    if(arr.length === 0) {
+      clearInterval(iID);  
+    }
+    let node = arr.shift();
+    console.log(`adding ${node}`);
+
+    tree = exports.insert(tree, node);
+
+    exports.writeFile(tree);
+  }, delay);
+
+  return tree;
 }
